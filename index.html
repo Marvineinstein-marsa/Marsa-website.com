@@ -1,1 +1,893 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MARSA – Maron Space Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --void:#020408;--deep:#030b14;--panel:#060f1e;--card:#091829;
+  --border:#0d2d50;--accent:#0ea5e9;--accent2:#06d6f5;--purple:#7c3aed;
+  --cyan:#00f5ff;--green:#00ff88;--orange:#ff6b35;--red:#ff3366;
+  --text:#e2f0ff;--muted:#5a8aaa;--dim:#2a5a7a;
+  --fh:'Orbitron',monospace;--fb:'Exo 2',sans-serif;--fm:'Share Tech Mono',monospace;
+  --glow:0 0 20px rgba(14,165,233,.4);--r:8px;--tr:all .2s cubic-bezier(.4,0,.2,1)
+}
+html{scroll-behavior:smooth}
+body{background:var(--void);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--deep)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes twinkle{0%,100%{opacity:.2}50%{opacity:.9}}
+@keyframes fadein{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes gridflow{0%{background-position:0 0}100%{background-position:0 60px}}
+@keyframes pulse{0%,100%{box-shadow:0 0 10px rgba(14,165,233,.3)}50%{box-shadow:0 0 30px rgba(14,165,233,.7)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slidein{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.fadein{animation:fadein .5s ease forwards}
+h1,h2,h3,h4{font-family:var(--fh);letter-spacing:.05em}
+a{color:var(--accent);text-decoration:none}
+input,textarea,select{background:rgba(14,165,233,.05);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--fb);font-size:.9rem;padding:10px 14px;width:100%;outline:none;transition:var(--tr)}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(14,165,233,.15)}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+select option{background:var(--panel)}
+label{display:block;font-size:.72rem;font-family:var(--fh);letter-spacing:.1em;color:var(--muted);margin-bottom:5px;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:var(--r);cursor:pointer;font-family:var(--fh);font-weight:600;letter-spacing:.12em;text-transform:uppercase;transition:var(--tr)}
+.btn-p{background:linear-gradient(135deg,#0ea5e9,#0055bb);color:#fff;padding:11px 26px;font-size:.7rem}
+.btn-p:hover{transform:translateY(-2px);box-shadow:var(--glow)}
+.btn-o{background:transparent;color:var(--accent);border:1px solid var(--accent);padding:10px 25px;font-size:.7rem}
+.btn-o:hover{background:rgba(14,165,233,.1);box-shadow:var(--glow);transform:translateY(-2px)}
+.btn-g{background:transparent;color:var(--muted);border:none;padding:7px 14px;font-size:.82rem;font-family:var(--fb);cursor:pointer;border-radius:var(--r);transition:var(--tr)}
+.btn-g:hover{color:var(--accent);background:rgba(14,165,233,.05)}
+.card{background:rgba(6,15,30,.85);border:1px solid var(--border);border-radius:12px;backdrop-filter:blur(10px);transition:var(--tr)}
+.card:hover{border-color:rgba(14,165,233,.4);box-shadow:0 4px 24px rgba(14,165,233,.1)}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.6rem;font-family:var(--fh);letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.t-b{background:rgba(14,165,233,.12);color:var(--accent);border:1px solid rgba(14,165,233,.3)}
+.t-g{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.t-p{background:rgba(124,58,237,.15);color:#a78bfa;border:1px solid rgba(124,58,237,.3)}
+.t-o{background:rgba(255,107,53,.12);color:var(--orange);border:1px solid rgba(255,107,53,.3)}
+.sec-title{font-family:var(--fh);font-size:clamp(1.1rem,3vw,1.7rem);font-weight:700;letter-spacing:.08em;display:inline-block}
+.sec-title::after{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--accent),transparent);margin-top:5px}
+@media(max-width:768px){.hm{display:none!important}.mf{width:100%!important}}
+@media(min-width:769px){.hd{display:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useReducer,useEffect,useRef,useCallback}=React;
+
+/* ── DATA ── */
+const PRODS=[
+  {id:1,name:"MARSA Scout Drone X1",cat:"Drones",price:285000,rating:4.8,reviews:24,stock:12,img:"🛸",desc:"Professional quadcopter with 4K camera, 30-min flight time, GPS return-to-home and obstacle avoidance.",badge:"Bestseller",feat:true},
+  {id:2,name:"Arduino Robotics Kit Pro",cat:"Robotics",price:125000,rating:4.7,reviews:31,stock:20,img:"🤖",desc:"Complete robotics kit with Arduino Mega, servo motors, ultrasonic sensors and full project guide.",badge:"New",feat:true},
+  {id:3,name:"200W Solar Panel System",cat:"Energy Systems",price:420000,rating:4.9,reviews:18,stock:8,img:"☀️",desc:"High-efficiency monocrystalline solar panel with charge controller and mounting hardware.",badge:"Top Rated",feat:true},
+  {id:4,name:"Advanced Science Lab Kit",cat:"Science Equipment",price:95000,rating:4.6,reviews:42,stock:30,img:"🔬",desc:"Full chemistry and physics lab kit for students and researchers. 150+ experiments included.",badge:null,feat:false},
+  {id:5,name:"Raspberry Pi 4 Starter Pack",cat:"Electronics",price:180000,rating:4.8,reviews:67,stock:15,img:"💻",desc:"Raspberry Pi 4 (4GB) with case, power supply and microSD preloaded with Raspbian OS.",badge:"Popular",feat:true},
+  {id:6,name:"DC Motor Bundle 10-Pack",cat:"Electronics",price:45000,rating:4.5,reviews:88,stock:50,img:"⚙️",desc:"10× high-torque DC motors 12V with encoder feedback. Ideal for robotics and automation.",badge:null,feat:false},
+  {id:7,name:"Wind Turbine Generator 500W",cat:"Energy Systems",price:550000,rating:4.7,reviews:9,stock:5,img:"🌬️",desc:"Permanent magnet alternator wind turbine with auto-furling tail for storm protection.",badge:"Limited",feat:false},
+  {id:8,name:"MARSA FPV Racing Drone Z3",cat:"Drones",price:650000,rating:4.9,reviews:11,stock:4,img:"🚁",desc:"Racing FPV drone with 5.8GHz video, 250mm carbon fiber frame and F4 flight controller.",badge:"Premium",feat:true},
+  {id:9,name:"DIY Electronics Starter Kit",cat:"DIY Technology",price:65000,rating:4.4,reviews:55,stock:40,img:"🔧",desc:"850-piece kit with breadboard, LEDs, resistors, capacitors and component guide.",badge:null,feat:false},
+  {id:10,name:"Robotic Arm Kit 6-DOF",cat:"Robotics",price:210000,rating:4.6,reviews:17,stock:10,img:"🦾",desc:"6-axis robotic arm with servo motors, Arduino controller and PC software.",badge:"New",feat:true},
+  {id:11,name:"Portable Power Station 1000W",cat:"Energy Systems",price:890000,rating:4.8,reviews:6,stock:3,img:"⚡",desc:"1000Wh LiFePO4, 1000W AC output, USB-C 100W, solar input. Perfect for field research.",badge:"Premium",feat:false},
+  {id:12,name:"Digital Multimeter Pro",cat:"Electronics",price:28000,rating:4.7,reviews:93,stock:35,img:"📊",desc:"True RMS digital multimeter, auto-ranging, capacitance, frequency and temperature.",badge:null,feat:false},
+  {id:13,name:"Smart Telescope 80AZ",cat:"Science Equipment",price:320000,rating:4.8,reviews:22,stock:7,img:"🔭",desc:"80mm refractor with smartphone adapter, GoTo motorized mount and star atlas.",badge:"Space",feat:true},
+  {id:14,name:"AI Jetson Nano Dev Board",cat:"Innovation Projects",price:175000,rating:4.9,reviews:8,stock:6,img:"🧠",desc:"NVIDIA Jetson Nano for AI edge computing, computer vision and robotics projects.",badge:"AI",feat:false},
+  {id:15,name:"Mini CNC Router Kit",cat:"DIY Technology",price:495000,rating:4.5,reviews:14,stock:5,img:"🏗️",desc:"GRBL-based 3-axis CNC, 300×300mm work area, spindle motor and laser compatible.",badge:null,feat:false},
+  {id:16,name:"3D Printer Filament 5-Pack",cat:"Innovation Projects",price:38000,rating:4.3,reviews:29,stock:60,img:"🖨️",desc:"1kg PLA spools in 5 colors. Works with all standard FDM 3D printers.",badge:null,feat:false},
+];
+const CATS=["All","Drones","Robotics","Electronics","Energy Systems","Science Equipment","DIY Technology","Innovation Projects","Electricity"];
+const ORDERS_DATA=[
+  {id:"ORD-2401",customer:"Alex Mutasa",email:"alex@email.com",total:570000,status:"Pending",date:"2025-06-14",items:2,payment:"Mobile Money"},
+  {id:"ORD-2402",customer:"Sarah Nakato",email:"sarah@email.com",total:125000,status:"Approved",date:"2025-06-13",items:1,payment:"PayPal"},
+  {id:"ORD-2403",customer:"Brian Ochieng",email:"brian@email.com",total:263000,status:"Shipped",date:"2025-06-12",items:3,payment:"Bank Transfer"},
+  {id:"ORD-2404",customer:"Maria Kamau",email:"maria@email.com",total:890000,status:"Pending",date:"2025-06-14",items:1,payment:"Mobile Money"},
+];
+const ADMIN="einsteinmarvin256@gmail.com";
+
+/* ── CART ── */
+const cartR=(s,a)=>{
+  if(a.t==="ADD"){const e=s.find(i=>i.id===a.item.id);return e?s.map(i=>i.id===a.item.id?{...i,qty:i.qty+(a.qty||1)}:i):[...s,{...a.item,qty:a.qty||1}]}
+  if(a.t==="REMOVE")return s.filter(i=>i.id!==a.id);
+  if(a.t==="QTY")return s.map(i=>i.id===a.id?{...i,qty:Math.max(1,a.qty)}:i);
+  if(a.t==="CLEAR")return[];
+  return s;
+};
+
+/* ── STARS ── */
+function Stars(){
+  const st=Array.from({length:70},(_,i)=>({id:i,x:Math.random()*100,y:Math.random()*100,s:Math.random()*2+.5,d:Math.random()*4,dur:Math.random()*3+2}));
+  return <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,overflow:"hidden"}}>
+    {st.map(s=><div key={s.id} style={{position:"absolute",left:`${s.x}%`,top:`${s.y}%`,width:`${s.s}px`,height:`${s.s}px`,borderRadius:"50%",background:"rgba(14,165,233,.7)",animation:`twinkle ${s.dur}s ${s.d}s infinite`}}/>)}
+  </div>;
+}
+
+/* ── TOAST ── */
+function Toast({msg}){
+  return msg?<div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"var(--panel)",border:"1px solid var(--accent)",borderRadius:8,padding:"11px 22px",fontFamily:"var(--fh)",fontSize:".72rem",color:"var(--accent)",zIndex:9999,boxShadow:"var(--glow)",animation:"fadein .3s ease",whiteSpace:"nowrap"}}>{msg}</div>:null;
+}
+
+/* ── NAV ── */
+function Nav({page,go,cartN,user,setUser}){
+  const [open,setOpen]=useState(false);
+  const [scrolled,setScrolled]=useState(false);
+  useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h)},[]);
+  const links=[["home","Home"],["shop","Shop"],["innovation","Innovation"],["electronics","Electronics"],["robotics","Robotics"],["drones","Drones"],["energy","Energy Tech"],["diy","DIY Science"],["about","About"],["contact","Contact"]];
+  return <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,background:scrolled?"rgba(2,4,8,.97)":"rgba(2,4,8,.88)",borderBottom:`1px solid ${scrolled?"rgba(14,165,233,.3)":"rgba(14,165,233,.1)"}`,backdropFilter:"blur(20px)",transition:"all .3s"}}>
+    <div style={{background:"linear-gradient(90deg,#0ea5e9,#7c3aed)",padding:"3px 20px",fontSize:".65rem",fontFamily:"var(--fh)",letterSpacing:".12em",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <span>🛰️ MARON SPACE AGENCY — Science · Technology · Innovation</span>
+      <span className="hm">📞 0706651038 | ✉️ einsteinmarvin256@gmail.com</span>
+    </div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",height:58}}>
+      <div onClick={()=>go("home")} style={{cursor:"pointer",display:"flex",alignItems:"center",gap:9}}>
+        <div style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#0ea5e9,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1rem",boxShadow:"0 0 14px rgba(14,165,233,.5)"}}>🛸</div>
+        <div><div style={{fontFamily:"var(--fh)",fontWeight:900,fontSize:".95rem",letterSpacing:".15em",color:"var(--accent)",lineHeight:1}}>MARSA</div><div style={{fontSize:".5rem",fontFamily:"var(--fh)",color:"var(--muted)",letterSpacing:".1em"}}>MARON SPACE AGENCY</div></div>
+      </div>
+      <div className="hm" style={{display:"flex",gap:1,alignItems:"center"}}>
+        {links.map(([id,l])=><button key={id} onClick={()=>go(id)} className="btn-g" style={{fontSize:".68rem",fontFamily:"var(--fh)",letterSpacing:".07em",padding:"5px 9px",color:page===id?"var(--accent)":"var(--muted)",borderBottom:page===id?"1px solid var(--accent)":"1px solid transparent",borderRadius:0}}>{l}</button>)}
+        <button onClick={()=>go("admin")} style={{background:"rgba(124,58,237,.15)",border:"1px solid rgba(124,58,237,.4)",color:"#a78bfa",padding:"4px 11px",borderRadius:20,cursor:"pointer",fontSize:".6rem",fontFamily:"var(--fh)",letterSpacing:".1em",marginLeft:6}}>⚡ ADMIN</button>
+      </div>
+      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+        <button onClick={()=>go("search")} className="btn-g" style={{fontSize:"1rem",padding:6}}>🔍</button>
+        <button onClick={()=>go("wishlist")} className="btn-g" style={{fontSize:"1rem",padding:6}}>♡</button>
+        <button onClick={()=>go("cart")} style={{background:"rgba(14,165,233,.1)",border:"1px solid rgba(14,165,233,.3)",borderRadius:8,padding:"5px 13px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"var(--accent)",fontFamily:"var(--fh)",fontSize:".72rem"}}>
+          🛒{cartN>0&&<span style={{background:"var(--accent)",color:"#000",borderRadius:"50%",width:17,height:17,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".6rem",fontWeight:700}}>{cartN}</span>}
+        </button>
+        {user?<button onClick={()=>go("account")} style={{background:"rgba(14,165,233,.1)",border:"1px solid rgba(14,165,233,.3)",borderRadius:"50%",width:34,height:34,cursor:"pointer",color:"var(--accent)",fontSize:".9rem"}}>👤</button>
+        :<button onClick={()=>go("login")} className="btn btn-p" style={{padding:"6px 14px",fontSize:".62rem"}}>LOGIN</button>}
+        <button onClick={()=>setOpen(!open)} className="hd btn-g" style={{fontSize:"1.2rem",padding:4}}>☰</button>
+      </div>
+    </div>
+    {open&&<div className="hd" style={{padding:"10px 18px 14px",borderTop:"1px solid var(--border)",background:"var(--panel)",display:"flex",flexDirection:"column",gap:3}}>
+      {links.map(([id,l])=><button key={id} onClick={()=>{go(id);setOpen(false)}} className="btn-g" style={{textAlign:"left",fontFamily:"var(--fh)",fontSize:".72rem"}}>{l}</button>)}
+      <button onClick={()=>{go("admin");setOpen(false)}} className="btn-g" style={{textAlign:"left",color:"#a78bfa",fontFamily:"var(--fh)",fontSize:".72rem"}}>⚡ ADMIN DASHBOARD</button>
+    </div>}
+  </nav>;
+}
+
+/* ── PRODUCT CARD ── */
+function PCard({p,onAdd,onDetail,wish,toggleWish}){
+  const [qty,setQty]=useState(1);
+  return <div className="card fadein" style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
+    <div onClick={()=>onDetail(p)} style={{height:130,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"3.5rem",background:"linear-gradient(135deg,rgba(14,165,233,.07),rgba(124,58,237,.07))",cursor:"pointer",border:"1px solid var(--border)",position:"relative",overflow:"hidden"}}>
+      {p.img}
+      {p.badge&&<span className="tag t-b" style={{position:"absolute",top:7,left:7,fontSize:".52rem"}}>{p.badge}</span>}
+      <button onClick={e=>{e.stopPropagation();toggleWish(p.id)}} style={{position:"absolute",top:5,right:5,background:"rgba(2,4,8,.7)",border:"none",borderRadius:"50%",width:26,height:26,cursor:"pointer",fontSize:".75rem"}}>{wish.includes(p.id)?"❤️":"🤍"}</button>
+    </div>
+    <div>
+      <div style={{fontSize:".58rem",fontFamily:"var(--fh)",color:"var(--muted)",letterSpacing:".1em",marginBottom:3}}>{p.cat.toUpperCase()}</div>
+      <div onClick={()=>onDetail(p)} style={{fontFamily:"var(--fh)",fontSize:".8rem",fontWeight:600,cursor:"pointer",lineHeight:1.3,marginBottom:5}}>{p.name}</div>
+      <div style={{fontSize:".75rem",color:"var(--muted)",lineHeight:1.5,marginBottom:6}}>{p.desc.slice(0,75)}…</div>
+      <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}>
+        <span style={{color:"#fbbf24",fontSize:".72rem"}}>{"★".repeat(Math.floor(p.rating))}{"☆".repeat(5-Math.floor(p.rating))}</span>
+        <span style={{fontSize:".65rem",color:"var(--muted)"}}>({p.reviews})</span>
+      </div>
+      <div style={{fontFamily:"var(--fh)",fontSize:"1rem",fontWeight:700,color:"var(--accent)"}}>UGX {p.price.toLocaleString()}</div>
+      <div style={{fontSize:".62rem",color:p.stock>5?"var(--green)":"var(--orange)",marginTop:2}}>{p.stock>0?`✓ ${p.stock} in stock`:"✗ Out of stock"}</div>
+    </div>
+    <div style={{display:"flex",gap:7,alignItems:"center"}}>
+      <div style={{display:"flex",alignItems:"center",border:"1px solid var(--border)",borderRadius:6,overflow:"hidden"}}>
+        <button onClick={()=>setQty(q=>Math.max(1,q-1))} style={{background:"none",border:"none",color:"var(--accent)",padding:"5px 9px",cursor:"pointer",fontSize:"1rem"}}>−</button>
+        <span style={{padding:"0 8px",fontFamily:"var(--fm)",fontSize:".82rem"}}>{qty}</span>
+        <button onClick={()=>setQty(q=>q+1)} style={{background:"none",border:"none",color:"var(--accent)",padding:"5px 9px",cursor:"pointer",fontSize:"1rem"}}>+</button>
+      </div>
+      <button onClick={()=>onAdd(p,qty)} className="btn btn-p" style={{flex:1,padding:"7px 8px",fontSize:".6rem"}}>ADD TO CART</button>
+    </div>
+    <button onClick={()=>onDetail(p)} className="btn btn-o" style={{padding:"7px",fontSize:".6rem"}}>BUY NOW →</button>
+  </div>;
+}
+
+/* ── HOME ── */
+function HomePage({prods,go,cartD,wish,toggleWish,setDP}){
+  const secData=[
+    {icon:"⭐",title:"Featured Technology",color:"#0ea5e9",filter:p=>p.feat},
+    {icon:"🆕",title:"New Innovations",color:"#00ff88",filter:p=>p.badge==="New"},
+    {icon:"🔧",title:"DIY Science Tools",color:"#ff6b35",filter:p=>p.cat==="DIY Technology"},
+    {icon:"💡",title:"Electronics & Robotics",color:"#7c3aed",filter:p=>["Electronics","Robotics"].includes(p.cat)},
+    {icon:"🛸",title:"Drone Technology",color:"#00f5ff",filter:p=>p.cat==="Drones"},
+    {icon:"⚡",title:"Energy & Electricity",color:"#fbbf24",filter:p=>p.cat==="Energy Systems"},
+  ];
+  return <div>
+    {/* HERO */}
+    <section style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"120px 24px 60px",background:"radial-gradient(ellipse at 30% 50%,rgba(14,165,233,.07) 0%,transparent 60%),radial-gradient(ellipse at 70% 30%,rgba(124,58,237,.05) 0%,transparent 60%)",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(14,165,233,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,233,.04) 1px,transparent 1px)",backgroundSize:"60px 60px",animation:"gridflow 4s linear infinite",pointerEvents:"none"}}/>
+      <div style={{maxWidth:880,width:"100%",textAlign:"center",position:"relative",zIndex:1}}>
+        <div style={{marginBottom:22,display:"flex",justifyContent:"center"}}>
+          <span className="tag t-b" style={{padding:"5px 16px",fontSize:".62rem"}}>🛸 MARON SPACE AGENCY — EST. 2025</span>
+        </div>
+        <h1 style={{fontFamily:"var(--fh)",fontSize:"clamp(1.7rem,6vw,3.8rem)",fontWeight:900,lineHeight:1.1,letterSpacing:".04em",marginBottom:18,background:"linear-gradient(135deg,#fff 0%,#0ea5e9 50%,#7c3aed 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>
+          WELCOME TO MARSA —<br/>THE FUTURE OF SCIENCE<br/>&amp; INNOVATION
+        </h1>
+        <p style={{fontSize:"clamp(.88rem,2vw,1.05rem)",color:"var(--muted)",maxWidth:600,margin:"0 auto 34px",lineHeight:1.75}}>
+          MARSA is a technology marketplace where creators, innovators and engineers share futuristic inventions, electronics and science equipment.
+        </p>
+        <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:56}}>
+          <button onClick={()=>go("shop")} className="btn btn-p" style={{padding:"13px 34px",fontSize:".78rem"}}>🛒 Shop Now</button>
+          <button onClick={()=>go("innovation")} className="btn btn-o" style={{padding:"13px 34px",fontSize:".78rem"}}>🚀 Explore Innovation</button>
+        </div>
+        <div style={{display:"flex",gap:36,justifyContent:"center",flexWrap:"wrap"}}>
+          {[["200+","Products"],["5K+","Innovators"],["50+","Countries"],["99%","Satisfaction"]].map(([n,l])=>
+            <div key={l} style={{textAlign:"center"}}>
+              <div style={{fontFamily:"var(--fh)",fontSize:"clamp(1.1rem,3vw,1.7rem)",fontWeight:800,color:"var(--accent)"}}>{n}</div>
+              <div style={{fontSize:".68rem",color:"var(--muted)",fontFamily:"var(--fh)",letterSpacing:".1em"}}>{l}</div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="hm" style={{position:"absolute",right:"7%",top:"30%",width:180,height:180,borderRadius:"50%",background:"radial-gradient(circle,rgba(14,165,233,.13),transparent)",border:"1px solid rgba(14,165,233,.2)",animation:"float 6s ease-in-out infinite",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"3.5rem"}}>🛸</div>
+    </section>
+    {/* SECTIONS */}
+    <div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px 80px"}}>
+      {secData.map(sec=>{
+        const items=prods.filter(sec.filter).slice(0,4);
+        return <section key={sec.title} style={{marginBottom:72}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28,flexWrap:"wrap",gap:10}}>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:5}}>
+                <span style={{fontSize:"1.6rem"}}>{sec.icon}</span>
+                <h2 className="sec-title" style={{color:sec.color}}>{sec.title}</h2>
+              </div>
+            </div>
+            <button onClick={()=>go("shop")} className="btn btn-o" style={{padding:"7px 18px",fontSize:".6rem",borderColor:sec.color,color:sec.color}}>View All →</button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))",gap:18}}>
+            {items.map(p=><PCard key={p.id} p={p} onAdd={(p,q)=>cartD({t:"ADD",item:p,qty:q})} onDetail={p=>{setDP(p);go("product")}} wish={wish} toggleWish={toggleWish}/>)}
+          </div>
+        </section>;
+      })}
+      {/* Newsletter */}
+      <section style={{background:"linear-gradient(135deg,rgba(14,165,233,.09),rgba(124,58,237,.09))",border:"1px solid var(--border)",borderRadius:16,padding:"44px 36px",textAlign:"center",position:"relative",overflow:"hidden"}}>
+        <h2 style={{fontFamily:"var(--fh)",fontSize:"clamp(1.1rem,3vw,1.5rem)",marginBottom:10}}>🚀 Stay Ahead of the Future</h2>
+        <p style={{color:"var(--muted)",marginBottom:22,fontSize:".88rem"}}>Subscribe for new products, innovation updates and exclusive MARSA deals</p>
+        <div style={{display:"flex",gap:10,maxWidth:400,margin:"0 auto",flexWrap:"wrap"}}>
+          <input placeholder="your@email.com" style={{flex:1}}/>
+          <button className="btn btn-p" style={{whiteSpace:"nowrap"}}>SUBSCRIBE</button>
+        </div>
+      </section>
+    </div>
+  </div>;
+}
+
+/* ── SHOP ── */
+function ShopPage({prods,cartD,wish,toggleWish,setDP,go}){
+  const [cat,setCat]=useState("All");
+  const [sort,setSort]=useState("default");
+  const [q,setQ]=useState("");
+  const [minP,setMinP]=useState(0);
+  const [maxP,setMaxP]=useState(1000000);
+  const list=prods.filter(p=>cat==="All"||p.cat===cat).filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.desc.toLowerCase().includes(q.toLowerCase())).filter(p=>p.price>=minP&&p.price<=maxP).sort((a,b)=>sort==="pa"?a.price-b.price:sort==="pd"?b.price-a.price:sort==="r"?b.rating-a.rating:0);
+  return <div style={{maxWidth:1280,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <div style={{marginBottom:28}}>
+      <h1 className="sec-title" style={{fontSize:"clamp(1.3rem,4vw,1.9rem)"}}>🛒 MARSA SHOP</h1>
+      <p style={{color:"var(--muted)",marginTop:7,fontSize:".84rem"}}>{list.length} products available</p>
+    </div>
+    <div style={{display:"flex",gap:22,flexWrap:"wrap"}}>
+      {/* Sidebar */}
+      <div className="hm" style={{width:210,flexShrink:0}}>
+        <div className="card" style={{padding:18}}>
+          <div style={{fontFamily:"var(--fh)",fontSize:".7rem",letterSpacing:".14em",color:"var(--accent)",marginBottom:14}}>CATEGORIES</div>
+          {CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{display:"block",width:"100%",textAlign:"left",background:cat===c?"rgba(14,165,233,.1)":"none",border:cat===c?"1px solid rgba(14,165,233,.3)":"1px solid transparent",borderRadius:5,color:cat===c?"var(--accent)":"var(--muted)",padding:"7px 11px",cursor:"pointer",fontFamily:"var(--fb)",fontSize:".8rem",marginBottom:3,transition:"var(--tr)"}}>{c}</button>)}
+          <div style={{fontFamily:"var(--fh)",fontSize:".7rem",letterSpacing:".14em",color:"var(--accent)",margin:"18px 0 10px"}}>PRICE RANGE</div>
+          <div style={{fontSize:".68rem",color:"var(--muted)",marginBottom:4}}>Min: UGX {minP.toLocaleString()}</div>
+          <input type="range" min="0" max="1000000" value={minP} onChange={e=>setMinP(+e.target.value)} style={{padding:0,marginBottom:8}}/>
+          <div style={{fontSize:".68rem",color:"var(--muted)",marginBottom:4}}>Max: UGX {maxP.toLocaleString()}</div>
+          <input type="range" min="0" max="1000000" value={maxP} onChange={e=>setMaxP(+e.target.value)} style={{padding:0}}/>
+        </div>
+      </div>
+      {/* Main */}
+      <div style={{flex:1}}>
+        <div style={{display:"flex",gap:10,marginBottom:20,flexWrap:"wrap"}}>
+          <input placeholder="🔍 Search products…" value={q} onChange={e=>setQ(e.target.value)} style={{flex:1,minWidth:180}}/>
+          <select value={sort} onChange={e=>setSort(e.target.value)} style={{width:170}}>
+            <option value="default">Sort: Default</option>
+            <option value="pa">Price: Low → High</option>
+            <option value="pd">Price: High → Low</option>
+            <option value="r">Top Rated</option>
+          </select>
+        </div>
+        <div className="hd" style={{display:"flex",gap:7,overflowX:"auto",paddingBottom:10,marginBottom:14}}>
+          {CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{whiteSpace:"nowrap",padding:"5px 13px",borderRadius:20,cursor:"pointer",fontSize:".72rem",background:cat===c?"var(--accent)":"rgba(14,165,233,.1)",color:cat===c?"#000":"var(--muted)",border:"1px solid rgba(14,165,233,.2)",fontFamily:"var(--fh)"}}>{c}</button>)}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(225px,1fr))",gap:18}}>
+          {list.map(p=><PCard key={p.id} p={p} onAdd={(p,q)=>cartD({t:"ADD",item:p,qty:q})} onDetail={p=>{setDP(p);go("product")}} wish={wish} toggleWish={toggleWish}/>)}
+        </div>
+        {list.length===0&&<div style={{textAlign:"center",padding:60,color:"var(--muted)"}}>
+          <div style={{fontSize:"3rem",marginBottom:14}}>🔭</div>
+          <div style={{fontFamily:"var(--fh)"}}>No products found</div>
+        </div>}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── PRODUCT DETAIL ── */
+function ProductDetail({p,cartD,wish,toggleWish,go}){
+  const [qty,setQty]=useState(1);
+  const [tab,setTab]=useState("desc");
+  const [added,setAdded]=useState(false);
+  if(!p)return null;
+  return <div style={{maxWidth:1050,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <button onClick={()=>go("shop")} className="btn-g" style={{marginBottom:22}}>← Back to Shop</button>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:36,flexWrap:"wrap"}}>
+      <div className="card" style={{padding:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"7rem",position:"relative",minHeight:280}}>
+        {p.img}
+        {p.badge&&<span className="tag t-b" style={{position:"absolute",top:14,left:14}}>{p.badge}</span>}
+        <button onClick={()=>toggleWish(p.id)} style={{position:"absolute",top:10,right:10,background:"none",border:"none",fontSize:"1.3rem",cursor:"pointer"}}>{wish.includes(p.id)?"❤️":"🤍"}</button>
+      </div>
+      <div>
+        <span className="tag t-b" style={{marginBottom:10,display:"inline-block"}}>{p.cat}</span>
+        <h1 style={{fontFamily:"var(--fh)",fontSize:"clamp(1.1rem,3vw,1.5rem)",marginBottom:10,lineHeight:1.3}}>{p.name}</h1>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+          <span style={{color:"#fbbf24"}}>{"★".repeat(Math.floor(p.rating))}</span>
+          <span style={{fontFamily:"var(--fh)",color:"var(--accent)",fontSize:".85rem"}}>{p.rating}</span>
+          <span style={{color:"var(--muted)",fontSize:".78rem"}}>({p.reviews} reviews)</span>
+        </div>
+        <div style={{fontFamily:"var(--fh)",fontSize:"1.8rem",fontWeight:800,color:"var(--accent)",marginBottom:7}}>UGX {p.price.toLocaleString()}</div>
+        <div style={{color:p.stock>5?"var(--green)":"var(--orange)",fontSize:".78rem",marginBottom:18}}>{p.stock>0?`✓ ${p.stock} units available`:"✗ Out of stock"}</div>
+        <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:18}}>
+          <label style={{marginBottom:0}}>QTY</label>
+          <div style={{display:"flex",alignItems:"center",border:"1px solid var(--border)",borderRadius:8,overflow:"hidden"}}>
+            <button onClick={()=>setQty(q=>Math.max(1,q-1))} style={{background:"none",border:"none",color:"var(--accent)",padding:"8px 14px",cursor:"pointer",fontSize:"1.1rem"}}>−</button>
+            <span style={{padding:"0 14px",fontFamily:"var(--fm)"}}>{qty}</span>
+            <button onClick={()=>setQty(q=>q+1)} style={{background:"none",border:"none",color:"var(--accent)",padding:"8px 14px",cursor:"pointer",fontSize:"1.1rem"}}>+</button>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:10,marginBottom:20,flexWrap:"wrap"}}>
+          <button onClick={()=>{cartD({t:"ADD",item:p,qty});setAdded(true);setTimeout(()=>setAdded(false),2000)}} className="btn btn-p" style={{flex:1}}>{added?"✓ ADDED!":"🛒 ADD TO CART"}</button>
+          <button onClick={()=>{cartD({t:"ADD",item:p,qty});go("checkout")}} className="btn btn-o" style={{flex:1}}>⚡ BUY NOW</button>
+        </div>
+        <div className="card" style={{padding:14}}>
+          {[["🚚","Free shipping over UGX 200,000"],["🔒","Secure payment"],["↩️","30-day returns"],["🛠️","1-year warranty"]].map(([ic,tx])=>
+            <div key={tx} style={{display:"flex",gap:9,alignItems:"center",padding:"5px 0",fontSize:".78rem",color:"var(--muted)"}}><span>{ic}</span><span>{tx}</span></div>
+          )}
+        </div>
+      </div>
+    </div>
+    <div style={{marginTop:36}}>
+      <div style={{display:"flex",borderBottom:"1px solid var(--border)",marginBottom:20}}>
+        {[["desc","Description"],["specs","Specifications"],["reviews","Reviews"]].map(([t,l])=>
+          <button key={t} onClick={()=>setTab(t)} style={{padding:"10px 22px",background:"none",border:"none",cursor:"pointer",fontFamily:"var(--fh)",fontSize:".7rem",letterSpacing:".1em",color:tab===t?"var(--accent)":"var(--muted)",borderBottom:tab===t?"2px solid var(--accent)":"2px solid transparent",transition:"var(--tr)"}}>{l}</button>
+        )}
+      </div>
+      <div className="card" style={{padding:22}}>
+        {tab==="desc"&&<p style={{lineHeight:1.85,color:"var(--muted)"}}>{p.desc}</p>}
+        {tab==="specs"&&<div>{[["Category",p.cat],["Stock",`${p.stock} units`],["Rating",`${p.rating}/5`],["SKU",`MARSA-${String(p.id).padStart(4,"0")}`]].map(([k,v])=>
+          <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:".84rem"}}>
+            <span style={{color:"var(--muted)",fontFamily:"var(--fh)",fontSize:".68rem"}}>{k}</span><span>{v}</span>
+          </div>
+        )}</div>}
+        {tab==="reviews"&&<div>{["Alex M.","Sarah K.","Brian O."].map((n,i)=>
+          <div key={n} style={{padding:"14px 0",borderBottom:"1px solid var(--border)"}}>
+            <div style={{display:"flex",gap:9,alignItems:"center",marginBottom:7}}>
+              <div style={{width:30,height:30,borderRadius:"50%",background:"linear-gradient(135deg,#0ea5e9,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem"}}>👤</div>
+              <div><div style={{fontFamily:"var(--fh)",fontSize:".7rem"}}>{n}</div><div style={{color:"#fbbf24",fontSize:".7rem"}}>★★★★★</div></div>
+            </div>
+            <p style={{color:"var(--muted)",fontSize:".8rem"}}>{["Excellent product, exactly as described!","Great quality, highly recommended.","Perfect for my robotics lab!"][i]}</p>
+          </div>
+        )}</div>}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── CART ── */
+function CartPage({cart,cartD,go}){
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const ship=total>=200000?0:15000;
+  return <div style={{maxWidth:980,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <h1 className="sec-title" style={{marginBottom:28}}>🛒 YOUR CART</h1>
+    {cart.length===0?<div style={{textAlign:"center",padding:80,color:"var(--muted)"}}>
+      <div style={{fontSize:"3.5rem",marginBottom:14}}>🛸</div>
+      <div style={{fontFamily:"var(--fh)",marginBottom:14}}>Your cart is empty</div>
+      <button onClick={()=>go("shop")} className="btn btn-p">START SHOPPING</button>
+    </div>:
+    <div style={{display:"grid",gridTemplateColumns:"1fr 300px",gap:22}}>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {cart.map(i=><div key={i.id} className="card" style={{padding:14,display:"flex",gap:14,alignItems:"center"}}>
+          <div style={{width:56,height:56,background:"rgba(14,165,233,.1)",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.8rem",flexShrink:0}}>{i.img}</div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:"var(--fh)",fontSize:".78rem",marginBottom:3}}>{i.name}</div>
+            <div style={{fontSize:".68rem",color:"var(--muted)"}}>{i.cat}</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",border:"1px solid var(--border)",borderRadius:6,overflow:"hidden"}}>
+            <button onClick={()=>cartD({t:"QTY",id:i.id,qty:i.qty-1})} style={{background:"none",border:"none",color:"var(--accent)",padding:"5px 9px",cursor:"pointer"}}>−</button>
+            <span style={{padding:"0 9px",fontFamily:"var(--fm)",fontSize:".82rem"}}>{i.qty}</span>
+            <button onClick={()=>cartD({t:"QTY",id:i.id,qty:i.qty+1})} style={{background:"none",border:"none",color:"var(--accent)",padding:"5px 9px",cursor:"pointer"}}>+</button>
+          </div>
+          <div style={{fontFamily:"var(--fh)",color:"var(--accent)",minWidth:105,textAlign:"right",fontSize:".82rem"}}>UGX {(i.price*i.qty).toLocaleString()}</div>
+          <button onClick={()=>cartD({t:"REMOVE",id:i.id})} style={{background:"none",border:"none",color:"var(--red)",cursor:"pointer",fontSize:"1rem"}}>✕</button>
+        </div>)}
+      </div>
+      <div className="card" style={{padding:22,height:"fit-content"}}>
+        <h3 style={{fontFamily:"var(--fh)",marginBottom:18,fontSize:".82rem"}}>ORDER SUMMARY</h3>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:7,fontSize:".83rem",color:"var(--muted)"}}><span>Subtotal</span><span>UGX {total.toLocaleString()}</span></div>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:7,fontSize:".83rem",color:"var(--muted)"}}><span>Shipping</span><span style={{color:ship===0?"var(--green)":""}}>{ship===0?"FREE":`UGX ${ship.toLocaleString()}`}</span></div>
+        <div style={{borderTop:"1px solid var(--border)",margin:"14px 0",paddingTop:14,display:"flex",justifyContent:"space-between"}}>
+          <span style={{fontFamily:"var(--fh)",fontWeight:700,fontSize:".82rem"}}>TOTAL</span>
+          <span style={{fontFamily:"var(--fh)",fontSize:"1rem",color:"var(--accent)",fontWeight:700}}>UGX {(total+ship).toLocaleString()}</span>
+        </div>
+        <button onClick={()=>go("checkout")} className="btn btn-p" style={{width:"100%",marginBottom:8}}>PROCEED TO CHECKOUT</button>
+        <button onClick={()=>go("shop")} className="btn-g" style={{width:"100%",textAlign:"center",display:"block"}}>Continue Shopping</button>
+      </div>
+    </div>}
+  </div>;
+}
+
+/* ── CHECKOUT ── */
+function CheckoutPage({cart,cartD,go}){
+  const [form,setForm]=useState({name:"",email:"",phone:"",address:"",city:"",country:"Uganda",pay:"mobile"});
+  const [step,setStep]=useState(1);
+  const [oid]=useState(`ORD-${Math.floor(Math.random()*9000+1000)}`);
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0)+(cart.reduce((s,i)=>s+i.price*i.qty,0)>=200000?0:15000);
+  const f=(k,v)=>setForm(x=>({...x,[k]:v}));
+  if(step===3)return <div style={{maxWidth:580,margin:"0 auto",padding:"120px 24px 60px",textAlign:"center"}}>
+    <div style={{fontSize:"5rem",marginBottom:18,animation:"float 3s ease-in-out infinite"}}>✅</div>
+    <h1 style={{fontFamily:"var(--fh)",fontSize:"1.5rem",color:"var(--green)",marginBottom:10}}>ORDER CONFIRMED!</h1>
+    <p style={{color:"var(--muted)",marginBottom:7}}>Order ID: <span style={{fontFamily:"var(--fm)",color:"var(--accent)"}}>{oid}</span></p>
+    <p style={{color:"var(--muted)",marginBottom:22,fontSize:".85rem"}}>Confirmation sent to <strong>{form.email||"your email"}</strong></p>
+    <div className="card" style={{padding:22,textAlign:"left",marginBottom:22}}>
+      <h3 style={{fontFamily:"var(--fh)",fontSize:".75rem",color:"var(--orange)",marginBottom:12}}>💳 PAYMENT INSTRUCTIONS</h3>
+      {form.pay==="mobile"&&<div>
+        <p style={{color:"var(--muted)",fontSize:".83rem",lineHeight:1.7,marginBottom:10}}>Send <strong style={{color:"var(--accent)"}}>UGX {total.toLocaleString()}</strong> via Mobile Money to:</p>
+        <div style={{background:"rgba(14,165,233,.1)",border:"1px solid var(--border)",borderRadius:8,padding:14,textAlign:"center",marginBottom:10}}>
+          <div style={{fontFamily:"var(--fm)",fontSize:"1.35rem",color:"var(--cyan)",fontWeight:700}}>0706651038</div>
+          <div style={{fontSize:".7rem",color:"var(--muted)",marginTop:3}}>MARSA – Maron Space Agency</div>
+        </div>
+        <p style={{color:"var(--muted)",fontSize:".78rem"}}>After payment, send your screenshot to <span style={{color:"var(--accent)"}}>einsteinmarvin256@gmail.com</span> with Order ID: <strong>{oid}</strong></p>
+      </div>}
+      {form.pay!=="mobile"&&<p style={{color:"var(--muted)",fontSize:".83rem"}}>Payment details will be sent to <strong>{form.email}</strong> shortly.</p>}
+    </div>
+    <button onClick={()=>go("home")} className="btn btn-p">BACK TO HOME</button>
+  </div>;
+  return <div style={{maxWidth:880,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <h1 className="sec-title" style={{marginBottom:28}}>⚡ CHECKOUT</h1>
+    <div style={{display:"flex",gap:7,marginBottom:36,alignItems:"center"}}>
+      {[["1","Details"],["2","Payment"]].map(([n,l],i)=><React.Fragment key={n}>
+        <div style={{display:"flex",alignItems:"center",gap:7}}>
+          <div style={{width:26,height:26,borderRadius:"50%",background:step>=i+1?"var(--accent)":"var(--card)",border:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--fh)",fontSize:".65rem",color:step>=i+1?"#000":"var(--muted)"}}>{n}</div>
+          <span style={{fontFamily:"var(--fh)",fontSize:".68rem",color:step>=i+1?"var(--accent)":"var(--muted)"}}>{l}</span>
+        </div>
+        {i<1&&<div style={{width:36,height:1,background:"var(--border)"}}/>}
+      </React.Fragment>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 280px",gap:22}}>
+      <div>
+        {step===1&&<div className="card" style={{padding:26,display:"flex",flexDirection:"column",gap:14}}>
+          <h3 style={{fontFamily:"var(--fh)",fontSize:".8rem",marginBottom:6}}>SHIPPING DETAILS</h3>
+          {[["name","Full Name","text"],["email","Email","email"],["phone","Phone","tel"]].map(([k,pl,t])=>
+            <div key={k}><label>{pl}</label><input type={t} placeholder={pl} value={form[k]} onChange={e=>f(k,e.target.value)}/></div>
+          )}
+          <div><label>Address</label><input placeholder="Street Address" value={form.address} onChange={e=>f("address",e.target.value)}/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div><label>City</label><input placeholder="City" value={form.city} onChange={e=>f("city",e.target.value)}/></div>
+            <div><label>Country</label><select value={form.country} onChange={e=>f("country",e.target.value)}>{["Uganda","Kenya","Tanzania","Rwanda","Ethiopia","South Africa","Nigeria"].map(c=><option key={c}>{c}</option>)}</select></div>
+          </div>
+          <button onClick={()=>setStep(2)} className="btn btn-p" style={{marginTop:6}}>CONTINUE TO PAYMENT →</button>
+        </div>}
+        {step===2&&<div className="card" style={{padding:26}}>
+          <h3 style={{fontFamily:"var(--fh)",fontSize:".8rem",marginBottom:18}}>PAYMENT METHOD</h3>
+          {[["mobile","📱 Mobile Money",`Send UGX ${total.toLocaleString()} to 0706651038`],["paypal","🅿️ PayPal","Secure international payment"],["bank","🏦 Bank Transfer","Direct bank deposit"],["stripe","💳 Stripe / Card","Visa, Mastercard, Amex"]].map(([v,l,d])=>
+            <div key={v} onClick={()=>f("pay",v)} style={{padding:14,border:`1px solid ${form.pay===v?"var(--accent)":"var(--border)"}`,borderRadius:8,marginBottom:10,cursor:"pointer",background:form.pay===v?"rgba(14,165,233,.07)":"transparent",transition:"var(--tr)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:9}}>
+                <div style={{width:15,height:15,borderRadius:"50%",border:`2px solid ${form.pay===v?"var(--accent)":"var(--border)"}`,background:form.pay===v?"var(--accent)":"none"}}/>
+                <span style={{fontFamily:"var(--fh)",fontSize:".78rem"}}>{l}</span>
+              </div>
+              <p style={{fontSize:".7rem",color:"var(--muted)",marginTop:5,paddingLeft:24}}>{d}</p>
+            </div>
+          )}
+          <div style={{display:"flex",gap:10,marginTop:18}}>
+            <button onClick={()=>setStep(1)} className="btn btn-o" style={{flex:1}}>← BACK</button>
+            <button onClick={()=>{setStep(3);cartD({t:"CLEAR"})}} className="btn btn-p" style={{flex:2}}>✓ PLACE ORDER</button>
+          </div>
+        </div>}
+      </div>
+      <div className="card" style={{padding:18,height:"fit-content"}}>
+        <h3 style={{fontFamily:"var(--fh)",fontSize:".72rem",marginBottom:14}}>ORDER SUMMARY</h3>
+        {cart.map(i=><div key={i.id} style={{display:"flex",gap:9,marginBottom:9,alignItems:"center"}}>
+          <span style={{fontSize:"1.3rem"}}>{i.img}</span>
+          <div style={{flex:1,fontSize:".72rem"}}><div style={{fontFamily:"var(--fh)",fontSize:".65rem"}}>{i.name}</div><div style={{color:"var(--muted)"}}>×{i.qty}</div></div>
+          <span style={{fontSize:".72rem",color:"var(--accent)"}}>UGX {(i.price*i.qty).toLocaleString()}</span>
+        </div>)}
+        <div style={{borderTop:"1px solid var(--border)",paddingTop:10,marginTop:10,display:"flex",justifyContent:"space-between",fontFamily:"var(--fh)",fontSize:".8rem"}}>
+          <span>TOTAL</span><span style={{color:"var(--accent)"}}>UGX {total.toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── AUTH ── */
+function AuthPage({setUser,go}){
+  const [mode,setMode]=useState("login");
+  const [form,setForm]=useState({name:"",email:"",pass:""});
+  const [err,setErr]=useState("");
+  const submit=()=>{
+    if(!form.email||!form.pass){setErr("Please fill all fields.");return;}
+    setUser({name:form.name||form.email.split("@")[0],email:form.email,isAdmin:form.email===ADMIN});
+    go(form.email===ADMIN?"admin":"account");
+  };
+  return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"100px 24px 60px"}}>
+    <div className="card" style={{padding:38,width:"100%",maxWidth:400}}>
+      <div style={{textAlign:"center",marginBottom:28}}>
+        <div style={{fontSize:"2.2rem",marginBottom:7}}>🛸</div>
+        <h2 style={{fontFamily:"var(--fh)",fontSize:"1.1rem"}}>{mode==="login"?"LOGIN TO MARSA":"CREATE ACCOUNT"}</h2>
+      </div>
+      <div style={{display:"flex",borderRadius:8,overflow:"hidden",border:"1px solid var(--border)",marginBottom:22}}>
+        {[["login","Login"],["register","Register"]].map(([m,l])=>
+          <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:9,background:mode===m?"var(--accent)":"none",color:mode===m?"#000":"var(--muted)",border:"none",cursor:"pointer",fontFamily:"var(--fh)",fontSize:".68rem",letterSpacing:".1em"}}>{l}</button>
+        )}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:13}}>
+        {mode==="register"&&<div><label>Full Name</label><input placeholder="Your name" value={form.name} onChange={e=>setForm(x=>({...x,name:e.target.value}))}/></div>}
+        <div><label>Email</label><input type="email" placeholder="your@email.com" value={form.email} onChange={e=>setForm(x=>({...x,email:e.target.value}))}/></div>
+        <div><label>Password</label><input type="password" placeholder="••••••••" value={form.pass} onChange={e=>setForm(x=>({...x,pass:e.target.value}))}/></div>
+        {err&&<div style={{color:"var(--red)",fontSize:".78rem"}}>{err}</div>}
+        <button onClick={submit} className="btn btn-p" style={{marginTop:6}}>{mode==="login"?"LOGIN →":"CREATE ACCOUNT →"}</button>
+        <p style={{textAlign:"center",fontSize:".72rem",color:"var(--muted)"}}>Admin: <span style={{color:"var(--accent)",fontFamily:"var(--fm)",fontSize:".65rem"}}>{ADMIN}</span></p>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── ACCOUNT ── */
+function AccountPage({user,setUser,go}){
+  if(!user){go("login");return null;}
+  const orders=[{id:"ORD-2401",date:"2025-06-14",total:570000,status:"Pending",items:"MARSA Scout Drone X1 ×2"},{id:"ORD-2398",date:"2025-06-10",total:125000,status:"Delivered",items:"Arduino Robotics Kit Pro"}];
+  return <div style={{maxWidth:860,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <div className="card" style={{padding:26,marginBottom:22,display:"flex",gap:18,alignItems:"center"}}>
+      <div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#0ea5e9,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.6rem"}}>👤</div>
+      <div>
+        <h2 style={{fontFamily:"var(--fh)",marginBottom:3,fontSize:"1.1rem"}}>{user.name}</h2>
+        <div style={{color:"var(--muted)",fontSize:".83rem"}}>{user.email}</div>
+        {user.isAdmin&&<span className="tag t-p" style={{marginTop:5,display:"inline-block"}}>⚡ Admin</span>}
+      </div>
+      <button onClick={()=>{setUser(null);go("home")}} className="btn btn-o" style={{marginLeft:"auto",color:"var(--red)",borderColor:"var(--red)",fontSize:".65rem"}}>LOGOUT</button>
+    </div>
+    <h2 className="sec-title" style={{marginBottom:18}}>MY ORDERS</h2>
+    {orders.map(o=><div key={o.id} className="card" style={{padding:18,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+      <div>
+        <div style={{fontFamily:"var(--fm)",color:"var(--accent)",fontSize:".83rem"}}>{o.id}</div>
+        <div style={{fontSize:".78rem",color:"var(--muted)",marginTop:2}}>{o.items}</div>
+        <div style={{fontSize:".7rem",color:"var(--dim)",marginTop:2}}>{o.date}</div>
+      </div>
+      <div style={{textAlign:"right"}}>
+        <div style={{fontFamily:"var(--fh)",color:"var(--accent)",fontSize:".88rem"}}>UGX {o.total.toLocaleString()}</div>
+        <span className={`tag ${o.status==="Delivered"?"t-g":"t-o"}`} style={{marginTop:5,display:"inline-block"}}>{o.status}</span>
+      </div>
+    </div>)}
+  </div>;
+}
+
+/* ── ADMIN ── */
+function AdminPage({prods,setProds,orders,user,go}){
+  const [tab,setTab]=useState("overview");
+  const [form,setForm]=useState({name:"",desc:"",price:"",cat:"Drones",stock:"",img:"🔧",badge:""});
+  const [saved,setSaved]=useState(false);
+  const [editId,setEditId]=useState(null);
+  const [editP,setEditP]=useState("");
+  const isAdmin=user?.email===ADMIN;
+  const rev=orders.reduce((s,o)=>s+o.total,0);
+  const addProd=()=>{
+    if(!form.name||!form.price)return;
+    setProds(p=>[...p,{id:Date.now(),name:form.name,desc:form.desc,price:+form.price,cat:form.cat,stock:+form.stock,img:form.img||"📦",badge:form.badge||null,rating:4.5,reviews:0,feat:false}]);
+    setForm({name:"",desc:"",price:"",cat:"Drones",stock:"",img:"🔧",badge:""});
+    setSaved(true);setTimeout(()=>setSaved(false),3000);
+  };
+  return <div style={{maxWidth:1180,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28,flexWrap:"wrap",gap:10}}>
+      <div><h1 className="sec-title">⚡ ADMIN DASHBOARD</h1><p style={{color:"var(--muted)",marginTop:5,fontSize:".82rem"}}>MARSA Control Center</p></div>
+      {!isAdmin&&<div style={{background:"rgba(255,51,102,.1)",border:"1px solid var(--red)",borderRadius:8,padding:"11px 14px",color:"var(--red)",fontSize:".8rem"}}>
+        ⚠️ Limited access. <button onClick={()=>go("login")} className="btn btn-p" style={{marginLeft:10,padding:"5px 13px",fontSize:".6rem"}}>ADMIN LOGIN</button>
+      </div>}
+      {isAdmin&&<span className="tag t-g">✓ FULL ADMIN ACCESS</span>}
+    </div>
+    <div style={{display:"flex",gap:3,borderBottom:"1px solid var(--border)",marginBottom:28,overflowX:"auto"}}>
+      {[["overview","📊 Overview"],["products","📦 Products"],["orders","🛒 Orders"],["upload","➕ Add Product"]].map(([t,l])=>
+        <button key={t} onClick={()=>setTab(t)} style={{padding:"9px 18px",background:"none",border:"none",cursor:"pointer",whiteSpace:"nowrap",fontFamily:"var(--fh)",fontSize:".68rem",letterSpacing:".1em",color:tab===t?"var(--accent)":"var(--muted)",borderBottom:tab===t?"2px solid var(--accent)":"2px solid transparent"}}>{l}</button>
+      )}
+    </div>
+    {tab==="overview"&&<div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))",gap:14,marginBottom:28}}>
+        {[["💰","Revenue",`UGX ${rev.toLocaleString()}`,"var(--green)"],["📋","Orders",orders.length,"var(--accent)"],["📦","Products",prods.length,"#a78bfa"],["⏳","Pending",orders.filter(o=>o.status==="Pending").length,"var(--orange)"]].map(([ic,lb,val,col])=>
+          <div key={lb} className="card" style={{padding:18,display:"flex",gap:12,alignItems:"center"}}>
+            <div style={{width:42,height:42,borderRadius:10,background:`${col}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem"}}>{ic}</div>
+            <div><div style={{fontFamily:"var(--fh)",fontSize:".6rem",color:"var(--muted)",letterSpacing:".1em"}}>{lb.toUpperCase()}</div><div style={{fontFamily:"var(--fh)",fontSize:"1rem",color:col}}>{val}</div></div>
+          </div>
+        )}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+        <div className="card" style={{padding:18}}>
+          <h3 style={{fontFamily:"var(--fh)",fontSize:".72rem",marginBottom:14,color:"var(--accent)"}}>RECENT ORDERS</h3>
+          {orders.slice(0,4).map(o=><div key={o.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--border)",fontSize:".78rem"}}>
+            <span style={{fontFamily:"var(--fm)",color:"var(--accent)"}}>{o.id}</span>
+            <span style={{color:"var(--muted)"}}>{o.customer}</span>
+            <span className={`tag ${o.status==="Approved"||o.status==="Shipped"?"t-g":"t-o"}`} style={{fontSize:".52rem"}}>{o.status}</span>
+          </div>)}
+        </div>
+        <div className="card" style={{padding:18}}>
+          <h3 style={{fontFamily:"var(--fh)",fontSize:".72rem",marginBottom:14,color:"var(--accent)"}}>STOCK ALERTS</h3>
+          {prods.filter(p=>p.stock<=5).map(p=><div key={p.id} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--border)",fontSize:".78rem"}}>
+            <span>{p.img} {p.name.slice(0,20)}…</span>
+            <span style={{color:p.stock<=3?"var(--red)":"var(--orange)"}}>{p.stock} left</span>
+          </div>)}
+        </div>
+      </div>
+    </div>}
+    {tab==="products"&&<div style={{overflowX:"auto"}}>
+      <table style={{width:"100%",borderCollapse:"collapse",minWidth:680}}>
+        <thead><tr style={{borderBottom:"1px solid var(--border)"}}>
+          {["","Name","Category","Price","Stock","Rating","Actions"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 11px",fontFamily:"var(--fh)",fontSize:".6rem",letterSpacing:".1em",color:"var(--muted)"}}>{h}</th>)}
+        </tr></thead>
+        <tbody>{prods.map(p=><tr key={p.id} style={{borderBottom:"1px solid rgba(13,45,80,.4)"}}>
+          <td style={{padding:"9px 11px",fontSize:"1.3rem"}}>{p.img}</td>
+          <td style={{padding:"9px 11px",fontFamily:"var(--fh)",fontSize:".74rem"}}>{p.name}</td>
+          <td style={{padding:"9px 11px"}}><span className="tag t-b" style={{fontSize:".55rem"}}>{p.cat}</span></td>
+          <td style={{padding:"9px 11px"}}>
+            {editId===p.id?<div style={{display:"flex",gap:5,alignItems:"center"}}>
+              <input value={editP} onChange={e=>setEditP(e.target.value)} style={{width:90,padding:"3px 7px",fontSize:".74rem"}}/>
+              <button onClick={()=>{setProds(x=>x.map(q=>q.id===p.id?{...q,price:+editP}:q));setEditId(null)}} style={{background:"var(--green)",border:"none",borderRadius:4,color:"#000",padding:"3px 7px",cursor:"pointer",fontSize:".65rem"}}>✓</button>
+            </div>:<span style={{fontFamily:"var(--fh)",color:"var(--accent)",fontSize:".75rem"}}>UGX {p.price.toLocaleString()}</span>}
+          </td>
+          <td style={{padding:"9px 11px",color:p.stock<=3?"var(--red)":p.stock<=5?"var(--orange)":"var(--green)",fontSize:".78rem"}}>{p.stock}</td>
+          <td style={{padding:"9px 11px",color:"#fbbf24",fontSize:".78rem"}}>★ {p.rating}</td>
+          <td style={{padding:"9px 11px"}}>
+            <div style={{display:"flex",gap:5}}>
+              <button onClick={()=>{setEditId(p.id);setEditP(p.price)}} style={{background:"rgba(14,165,233,.12)",border:"none",borderRadius:4,color:"var(--accent)",padding:"4px 9px",cursor:"pointer",fontSize:".65rem"}}>✏️ Edit</button>
+              <button onClick={()=>setProds(x=>x.filter(q=>q.id!==p.id))} style={{background:"rgba(255,51,102,.1)",border:"none",borderRadius:4,color:"var(--red)",padding:"4px 9px",cursor:"pointer",fontSize:".65rem"}}>🗑️ Del</button>
+            </div>
+          </td>
+        </tr>)}</tbody>
+      </table>
+    </div>}
+    {tab==="orders"&&<div style={{overflowX:"auto"}}>
+      <table style={{width:"100%",borderCollapse:"collapse",minWidth:680}}>
+        <thead><tr style={{borderBottom:"1px solid var(--border)"}}>
+          {["Order ID","Customer","Total","Payment","Date","Status","Action"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 11px",fontFamily:"var(--fh)",fontSize:".6rem",color:"var(--muted)"}}>{h}</th>)}
+        </tr></thead>
+        <tbody>{orders.map(o=><tr key={o.id} style={{borderBottom:"1px solid rgba(13,45,80,.4)"}}>
+          <td style={{padding:"9px 11px",fontFamily:"var(--fm)",color:"var(--accent)",fontSize:".78rem"}}>{o.id}</td>
+          <td style={{padding:"9px 11px",fontSize:".78rem"}}>{o.customer}</td>
+          <td style={{padding:"9px 11px",fontFamily:"var(--fh)",color:"var(--green)",fontSize:".75rem"}}>UGX {o.total.toLocaleString()}</td>
+          <td style={{padding:"9px 11px",fontSize:".72rem",color:"var(--muted)"}}>{o.payment}</td>
+          <td style={{padding:"9px 11px",fontSize:".72rem",color:"var(--muted)"}}>{o.date}</td>
+          <td style={{padding:"9px 11px"}}><span className={`tag ${o.status==="Approved"||o.status==="Shipped"?"t-g":o.status==="Pending"?"t-o":"t-b"}`} style={{fontSize:".54rem"}}>{o.status}</span></td>
+          <td style={{padding:"9px 11px"}}>{o.status==="Pending"&&<button style={{background:"rgba(0,255,136,.1)",border:"1px solid rgba(0,255,136,.3)",borderRadius:4,color:"var(--green)",padding:"3px 9px",cursor:"pointer",fontSize:".62rem",fontFamily:"var(--fh)"}}>APPROVE</button>}</td>
+        </tr>)}</tbody>
+      </table>
+    </div>}
+    {tab==="upload"&&<div style={{maxWidth:560}}>
+      <div className="card" style={{padding:30}}>
+        <h3 style={{fontFamily:"var(--fh)",marginBottom:22,color:"var(--accent)",fontSize:".85rem"}}>➕ UPLOAD NEW PRODUCT</h3>
+        {saved&&<div style={{background:"rgba(0,255,136,.1)",border:"1px solid var(--green)",borderRadius:8,padding:11,color:"var(--green)",marginBottom:14,fontFamily:"var(--fh)",fontSize:".72rem"}}>✓ Product added!</div>}
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div><label>Product Name *</label><input placeholder="e.g. MARSA Scout Drone X2" value={form.name} onChange={e=>setForm(x=>({...x,name:e.target.value}))}/></div>
+          <div><label>Description</label><textarea placeholder="Product description..." rows={3} value={form.desc} onChange={e=>setForm(x=>({...x,desc:e.target.value}))}/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div><label>Price (UGX) *</label><input type="number" placeholder="250000" value={form.price} onChange={e=>setForm(x=>({...x,price:e.target.value}))}/></div>
+            <div><label>Stock</label><input type="number" placeholder="10" value={form.stock} onChange={e=>setForm(x=>({...x,stock:e.target.value}))}/></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div><label>Category</label><select value={form.cat} onChange={e=>setForm(x=>({...x,cat:e.target.value}))}>{CATS.filter(c=>c!=="All").map(c=><option key={c}>{c}</option>)}</select></div>
+            <div><label>Badge</label><input placeholder="New, Premium…" value={form.badge} onChange={e=>setForm(x=>({...x,badge:e.target.value}))}/></div>
+          </div>
+          <div><label>Product Icon (emoji)</label><input placeholder="🛸 🤖 ⚡" value={form.img} onChange={e=>setForm(x=>({...x,img:e.target.value}))}/></div>
+          <button onClick={addProd} className="btn btn-p" style={{marginTop:6}}>💾 SAVE PRODUCT</button>
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+/* ── ABOUT ── */
+function AboutPage(){
+  return <div style={{maxWidth:860,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <div style={{textAlign:"center",marginBottom:52}}>
+      <div style={{fontSize:"3.8rem",marginBottom:14,animation:"float 4s ease-in-out infinite"}}>🛸</div>
+      <h1 className="sec-title" style={{fontSize:"clamp(1.4rem,4vw,2rem)",marginBottom:10}}>ABOUT MARSA</h1>
+      <p style={{color:"var(--muted)"}}>Maron Space Agency — Building the Future</p>
+    </div>
+    <div className="card" style={{padding:34,marginBottom:24,lineHeight:1.9}}>
+      <h2 style={{fontFamily:"var(--fh)",fontSize:".95rem",color:"var(--accent)",marginBottom:14}}>OUR MISSION</h2>
+      <p style={{color:"var(--muted)",marginBottom:14}}><strong style={{color:"var(--text)"}}>MARSA (Maron Space Agency)</strong> is a science and technology initiative founded by young innovators focused on building the future through engineering, research and innovation.</p>
+      <p style={{color:"var(--muted)",marginBottom:14}}>We believe that access to advanced technology should not be limited by geography or resources. Through our marketplace, we bring cutting-edge drones, robotics kits, solar energy systems, science equipment and DIY tools directly to creators and engineers across Africa and the world.</p>
+      <p style={{color:"var(--muted)"}}>Every product on MARSA is selected to empower the next generation of scientists, engineers and inventors. From classroom labs to professional research facilities — MARSA is where innovation begins.</p>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:18}}>
+      {[["🚀","Innovation First","We source only the most advanced experimental technology."],["🌍","Pan-African Vision","Built for Africa, designed for the world."],["🔬","Science Driven","Every product is tested and scientifically grounded."],["⚡","Sustainable Future","We prioritize clean energy and eco-friendly technology."]].map(([ic,ti,d])=>
+        <div key={ti} className="card" style={{padding:22,textAlign:"center"}}>
+          <div style={{fontSize:"2.2rem",marginBottom:10}}>{ic}</div>
+          <h3 style={{fontFamily:"var(--fh)",fontSize:".78rem",marginBottom:9,color:"var(--accent)"}}>{ti}</h3>
+          <p style={{fontSize:".78rem",color:"var(--muted)",lineHeight:1.7}}>{d}</p>
+        </div>
+      )}
+    </div>
+  </div>;
+}
+
+/* ── CONTACT ── */
+function ContactPage(){
+  const [form,setForm]=useState({name:"",email:"",subject:"",msg:""});
+  const [sent,setSent]=useState(false);
+  return <div style={{maxWidth:860,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <h1 className="sec-title" style={{marginBottom:7}}>📡 CONTACT MARSA</h1>
+    <p style={{color:"var(--muted)",marginBottom:36,fontSize:".85rem"}}>Get in touch with our team</p>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1.4fr",gap:28}}>
+      <div>
+        {[["📧","Email","einsteinmarvin256@gmail.com"],["📞","Phone / MoMo","0706651038"],["🌍","Location","Uganda, East Africa"],["⏰","Support Hours","Mon–Sat: 8AM–8PM EAT"]].map(([ic,lb,v])=>
+          <div key={lb} className="card" style={{padding:16,marginBottom:10,display:"flex",gap:12,alignItems:"center"}}>
+            <div style={{width:38,height:38,borderRadius:9,background:"rgba(14,165,233,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem",flexShrink:0}}>{ic}</div>
+            <div>
+              <div style={{fontFamily:"var(--fh)",fontSize:".6rem",color:"var(--muted)",letterSpacing:".1em"}}>{lb.toUpperCase()}</div>
+              <div style={{fontSize:".82rem",color:"var(--accent)",fontFamily:"var(--fm)"}}>{v}</div>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="card" style={{padding:26}}>
+        {sent?<div style={{textAlign:"center",padding:"36px 0"}}>
+          <div style={{fontSize:"2.8rem",marginBottom:14}}>✅</div>
+          <h3 style={{fontFamily:"var(--fh)",color:"var(--green)",marginBottom:7,fontSize:"1rem"}}>MESSAGE SENT!</h3>
+          <p style={{color:"var(--muted)",fontSize:".82rem"}}>We'll reply within 24 hours.</p>
+          <button onClick={()=>setSent(false)} className="btn-g" style={{marginTop:14}}>Send another</button>
+        </div>:
+        <div style={{display:"flex",flexDirection:"column",gap:13}}>
+          <h3 style={{fontFamily:"var(--fh)",fontSize:".8rem",marginBottom:6}}>SEND A MESSAGE</h3>
+          {[["name","Name","text"],["email","Email","email"],["subject","Subject","text"]].map(([k,pl,t])=>
+            <div key={k}><label>{pl}</label><input type={t} placeholder={pl} value={form[k]} onChange={e=>setForm(x=>({...x,[k]:e.target.value}))}/></div>
+          )}
+          <div><label>Message</label><textarea rows={4} placeholder="Your message..." value={form.msg} onChange={e=>setForm(x=>({...x,msg:e.target.value}))}/></div>
+          <button onClick={()=>{if(form.name&&form.email)setSent(true)}} className="btn btn-p">SEND MESSAGE 🚀</button>
+        </div>}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── WISHLIST ── */
+function WishlistPage({prods,wish,toggleWish,cartD,setDP,go}){
+  const list=prods.filter(p=>wish.includes(p.id));
+  return <div style={{maxWidth:1100,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <h1 className="sec-title" style={{marginBottom:28}}>❤️ WISHLIST</h1>
+    {list.length===0?<div style={{textAlign:"center",padding:80,color:"var(--muted)"}}>
+      <div style={{fontSize:"3rem",marginBottom:14}}>🤍</div>
+      <div style={{fontFamily:"var(--fh)",marginBottom:14}}>Your wishlist is empty</div>
+      <button onClick={()=>go("shop")} className="btn btn-p">EXPLORE PRODUCTS</button>
+    </div>:
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(225px,1fr))",gap:18}}>
+      {list.map(p=><PCard key={p.id} p={p} onAdd={(p,q)=>cartD({t:"ADD",item:p,qty:q})} onDetail={p=>{setDP(p);go("product")}} wish={wish} toggleWish={toggleWish}/>)}
+    </div>}
+  </div>;
+}
+
+/* ── SEARCH ── */
+function SearchPage({prods,cartD,wish,toggleWish,setDP,go}){
+  const [q,setQ]=useState("");
+  const res=q.length>1?prods.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.desc.toLowerCase().includes(q.toLowerCase())||p.cat.toLowerCase().includes(q.toLowerCase())):[];
+  return <div style={{maxWidth:1000,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <h1 className="sec-title" style={{marginBottom:22}}>🔍 SEARCH</h1>
+    <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search products, categories…" style={{marginBottom:28,fontSize:"1rem",padding:"13px 17px"}} autoFocus/>
+    {q.length>1&&<p style={{color:"var(--muted)",marginBottom:18,fontSize:".82rem"}}>{res.length} results for "{q}"</p>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:18}}>
+      {res.map(p=><PCard key={p.id} p={p} onAdd={(p,q)=>cartD({t:"ADD",item:p,qty:q})} onDetail={p=>{setDP(p);go("product")}} wish={wish} toggleWish={toggleWish}/>)}
+    </div>
+  </div>;
+}
+
+/* ── CAT PAGE ── */
+function CatPage({title,icon,cats,prods,cartD,wish,toggleWish,setDP,go}){
+  const list=prods.filter(p=>Array.isArray(cats)?cats.includes(p.cat):p.cat===cats);
+  return <div style={{maxWidth:1200,margin:"0 auto",padding:"100px 24px 60px"}}>
+    <div style={{marginBottom:36}}>
+      <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:9}}>
+        <span style={{fontSize:"2.2rem"}}>{icon}</span>
+        <h1 className="sec-title" style={{fontSize:"clamp(1.2rem,4vw,1.9rem)"}}>{title}</h1>
+      </div>
+      <p style={{color:"var(--dim)",fontSize:".78rem"}}>{list.length} products</p>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(225px,1fr))",gap:18}}>
+      {list.map(p=><PCard key={p.id} p={p} onAdd={(p,q)=>cartD({t:"ADD",item:p,qty:q})} onDetail={p=>{setDP(p);go("product")}} wish={wish} toggleWish={toggleWish}/>)}
+    </div>
+    {list.length===0&&<div style={{textAlign:"center",padding:60,color:"var(--muted)"}}><div style={{fontSize:"3rem"}}>🔭</div><div style={{marginTop:12,fontFamily:"var(--fh)"}}>No products yet</div></div>}
+  </div>;
+}
+
+/* ── FOOTER ── */
+function Footer({go}){
+  return <footer style={{background:"var(--panel)",borderTop:"1px solid var(--border)",padding:"52px 24px 28px"}}>
+    <div style={{maxWidth:1200,margin:"0 auto"}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))",gap:36,marginBottom:36}}>
+        <div>
+          <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:14}}><span style={{fontSize:"1.4rem"}}>🛸</span><span style={{fontFamily:"var(--fh)",fontSize:".92rem",color:"var(--accent)",letterSpacing:".15em"}}>MARSA</span></div>
+          <p style={{fontSize:".8rem",color:"var(--muted)",lineHeight:1.75,marginBottom:14}}>Maron Space Agency — Science, Technology and Innovation for the Future.</p>
+        </div>
+        {[["SHOP",[["shop","All Products"],["drones","Drones"],["robotics","Robotics"],["electronics","Electronics"],["energy","Energy Systems"]]],["COMPANY",[["about","About MARSA"],["contact","Contact"],["innovation","Innovation"],["diy","DIY Science"]]],["CONTACT",[]]].map(([title,links])=>
+          <div key={title}>
+            <h4 style={{fontFamily:"var(--fh)",fontSize:".68rem",letterSpacing:".14em",color:"var(--muted)",marginBottom:13}}>{title}</h4>
+            {title==="CONTACT"?<div style={{fontSize:".8rem",color:"var(--muted)",lineHeight:2}}>
+              <div>📧 einsteinmarvin256@gmail.com</div><div>📞 0706651038</div><div>🌍 Uganda, East Africa</div>
+            </div>:links.map(([pg,lb])=><button key={lb} onClick={()=>go(pg)} className="btn-g" style={{display:"block",textAlign:"left",fontSize:".8rem",padding:"3px 0",width:"auto"}}>{lb}</button>)}
+          </div>
+        )}
+      </div>
+      <div style={{borderTop:"1px solid var(--border)",paddingTop:20,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:10,fontSize:".72rem",color:"var(--dim)"}}>
+        <span>© 2025 MARSA — Maron Space Agency. All rights reserved.</span>
+        <span style={{fontFamily:"var(--fm)"}}>Built with ⚡ for the future of innovation</span>
+      </div>
+    </div>
+  </footer>;
+}
+
+/* ── APP ── */
+function App(){
+  const [page,setPage]=useState("home");
+  const [cart,cartD]=useReducer(cartR,[]);
+  const [wish,setWish]=useState([]);
+  const [user,setUser]=useState(null);
+  const [prods,setProds]=useState(PRODS);
+  const [orders]=useState(ORDERS_DATA);
+  const [dp,setDP]=useState(null);
+  const [toast,setToast]=useState("");
+
+  const go=useCallback(pg=>{setPage(pg);window.scrollTo({top:0,behavior:"smooth"})},[]);
+
+  const toggleWish=id=>{
+    setWish(w=>w.includes(id)?w.filter(x=>x!==id):[...w,id]);
+    setToast(wish.includes(id)?"Removed from wishlist":"Added to wishlist ❤️");
+    setTimeout(()=>setToast(""),2000);
+  };
+  const wCartD=a=>{
+    cartD(a);
+    if(a.t==="ADD"){setToast("Added to cart! 🛒");setTimeout(()=>setToast(""),2000);}
+  };
+
+  const cp={prods,go,cartD:wCartD,wish,toggleWish,setDP};
+  const catMap={
+    innovation:{title:"Innovation Projects",icon:"🚀",cats:"Innovation Projects"},
+    electronics:{title:"Electronics & DIY",icon:"💡",cats:["Electronics","DIY Technology"]},
+    robotics:{title:"Robotics",icon:"🤖",cats:"Robotics"},
+    drones:{title:"Drone Technology",icon:"🛸",cats:"Drones"},
+    energy:{title:"Energy & Power Systems",icon:"⚡",cats:"Energy Systems"},
+    diy:{title:"DIY Science",icon:"🔧",cats:"DIY Technology"},
+  };
+
+  const render=()=>{
+    if(page in catMap){const c=catMap[page];return <CatPage {...cp} title={c.title} icon={c.icon} cats={c.cats}/>;}
+    switch(page){
+      case "home":return <HomePage {...cp}/>;
+      case "shop":return <ShopPage {...cp}/>;
+      case "product":return <ProductDetail p={dp} cartD={wCartD} wish={wish} toggleWish={toggleWish} go={go}/>;
+      case "cart":return <CartPage cart={cart} cartD={cartD} go={go}/>;
+      case "checkout":return <CheckoutPage cart={cart} cartD={cartD} go={go}/>;
+      case "login":return <AuthPage setUser={setUser} go={go}/>;
+      case "account":return <AccountPage user={user} setUser={setUser} go={go}/>;
+      case "admin":return <AdminPage prods={prods} setProds={setProds} orders={orders} user={user} go={go}/>;
+      case "about":return <AboutPage/>;
+      case "contact":return <ContactPage/>;
+      case "wishlist":return <WishlistPage {...cp}/>;
+      case "search":return <SearchPage {...cp}/>;
+      default:return <HomePage {...cp}/>;
+    }
+  };
+
+  return <div style={{minHeight:"100vh",position:"relative"}}>
+    <Stars/>
+    <div style={{position:"relative",zIndex:1}}>
+      <Nav page={page} go={go} cartN={cart.reduce((s,i)=>s+i.qty,0)} user={user} setUser={setUser}/>
+      <main>{render()}</main>
+      {!["checkout","login"].includes(page)&&<Footer go={go}/>}
+    </div>
+    <Toast msg={toast}/>
+  </div>;
+}
+
+const root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
